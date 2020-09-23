@@ -6,9 +6,9 @@ document.addEventListener('deviceready', function() {
     location: 'default',
   });
 
-//    dropDataBase();
-//   createDataBase_Espaco();
-//   createDataBase_Localizacao();
+    //dropDataBase();
+    //createDataBase_Espaco();
+  //  createDataBase_Localizacao();
 //   createDataBase_Item();
 //   createDataBase_ItemAcesso();
 
@@ -25,9 +25,12 @@ document.addEventListener('deviceready', function() {
 
 abrePagina = (href, props) => {
     const pathname = `${href}.html#${props}`
+
     window.plugins.nativepagetransitions.slide({
         "href": pathname
     });
+
+    return pathname;
 }
 
 swipeTouch = () => {
@@ -42,13 +45,21 @@ storageData = () => {
 
 //percorre os parametros da url na página
 pathPage = () => {
-    const pathname = window.location.href;
-    pathname.split("#");
+    const params =  window.location.href.split("#");
+    /*for(var i = 0; i < params.length; i++){
+        var p = params[i].split('=');
+            if (p[0] == theParameter) {
+                return decodeURIComponent(p[1]);
+            }
+    }*/
+ 
+    return decodeURIComponent(params[1]);
 }
 
 dropDataBase = () =>{
     db.transaction(function(transaction){
         transaction.executeSql('DROP TABLE ESPACO');
+        transaction.executeSql('DROP TABLE espaco');
         transaction.executeSql('DROP TABLE espaco');
         transaction.executeSql('DROP TABLE LOCALIZACAO');
         transaction.executeSql('DROP TABLE ITEM'); 
@@ -124,7 +135,7 @@ insertDb_Espaco = () =>{
             transaction.executeSql('INSERT INTO ESPACO(IDEMPRESA, DESCRICAO) VALUES (1, "'+input_espaco+'")');
         },
         (error) => {
-            alert(`Query Error: ${error}`);
+            alert(`Query Error: ${error.mensage}`);
         },
         () => {
             alert(`Cadastro efetuado com sucesso`);
@@ -145,7 +156,7 @@ selectDb_Espaco = () =>{
     db.transaction((transaction) =>{
         transaction.executeSql('SELECT * FROM ESPACO;', [], (transaction, result)=>{
             for(let i=0; result.rows.length; i++){
-               element.append(`<a href="javascript:void(0);" onclick="abrePagina('list_localizacao','${result.rows.item(i).idespaco}');">${result.rows.item(i).descricao}</a>`);
+               element.append(`<a href="javascript:void(0);" onclick="abrePagina('list_localizacao',${result.rows.item(i).IDESPACO});">${result.rows.item(i).DESCRICAO}</a>`);
             }
         });
 
@@ -153,27 +164,51 @@ selectDb_Espaco = () =>{
 }
 
 
+
 /*
     insere as informações da tabela localizacao
 */
+insertDb_Localizacao = (props) => {
+    let id_espaco         = props;
+    let input_localizacao = $("#input_localizacao").val();
+
+    if($.trim(input_localizacao).length != 0){
+        db.transaction(function(transaction){
+            transaction.executeSql('INSERT INTO LOCALIZACAO (IDESPACO, DESCRICAO) VALUES ("'+id_espaco+'", "'+input_localizacao+'")');
+        },
+        function(error){
+            alert(`Query Error: ${error.mensage}`);
+        },
+        function(){
+            alert("Cadastro efetuado com sucesso");
+            $("#app-form")[0].reset();
+        });
+    }else{
+        alert("Preencha o campo!");
+    }
+}
+
+/*
+    lista as informações da tabela espaço
+*/
 selectDb_Localizacao = () =>{
-    let element     = $("#app-menu-page-2");
+    let element         = $("#app-menu-page-2");
+    let id_espaco  = ""; 
+    if(pathPage() != "undefined"){
+        id_espaco = pathPage();
+    }
 
     db.transaction(function(tr){
-        tr.executeSql('SELECT * FROM LOCALIZACAO;', [], function(tr, result){
+        tr.executeSql('SELECT * FROM LOCALIZACAO WHERE IDESPACO=?;', [id_espaco], function(tr, result){
             // alert("Quantidade Resultados: " + result.rows.length);
             for(let i=0; result.rows.length; i++){
-                element.append(`<a href="javascript:void(0);" onclick="abrePagina('list_item','${result.rows.item(i).idlocalizacao}');">${result.rows.item(i).descricao}</a>`);
+                element.append(`<a href="javascript:void(0);" onclick="abrePagina('list_item','${result.rows.item(i).IDLOCALIZACAO}');">${result.rows.item(i).DESCRICAO}</a>`);
             }
             
         })
     });
 
-
-    pathPage();
-
 }
-
 
 
 
